@@ -1,0 +1,3 @@
+for D:\Projects\fraud-detection-project = uvicorn main:app --reload
+
+for D:\Projects\fraud-detection-project\fraud-detector-ui = npm start
