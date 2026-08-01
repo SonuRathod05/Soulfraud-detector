@@ -63,25 +63,29 @@ function App() {
     setIsLoading(true); // Start animation
     setResult(null); // Hide previous result
 
-    // Simulate network delay for demo purposes (remove setTimeot for real app)
-    setTimeout(async () => {
-        try {
-            // Ensure types are sent as integers
-            const payload = {
-                ...formData,
-                step: parseInt(formData.step) || 0,
-                amount: parseFloat(formData.amount) || 0,
-                // ... add parseFloat for all other balance fields here ...
-            }
-            const response = await axios.post('http://127.0.0.1:8000/predict', payload);
-            setResult(response.data.is_fraud);
-        } catch (error) {
-            console.error("Error connecting to API:", error);
-            setResult('error');
-        } finally {
-            setIsLoading(false); // Stop animation
-        }
-    }, 1000); 
+    try {
+      // Formatted payload sent to backend
+      const payload = {
+        ...formData,
+        step: parseInt(formData.step) || 0,
+        amount: parseFloat(formData.amount) || 0,
+        oldbalanceOrg: parseFloat(formData.oldbalanceOrg) || 0,
+        newbalanceOrig: parseFloat(formData.newbalanceOrig) || 0,
+        oldbalanceDest: parseFloat(formData.oldbalanceDest) || 0,
+        newbalanceDest: parseFloat(formData.newbalanceDest) || 0,
+        error_orig: parseFloat(formData.error_orig) || 0,
+        error_dest: parseFloat(formData.error_dest) || 0,
+      };
+
+      // Live Render API Endpoint
+      const response = await axios.post('https://soulfraud-detector.onrender.com/predict', payload);
+      setResult(response.data.is_fraud);
+    } catch (error) {
+      console.error("Error connecting to API:", error);
+      setResult('error');
+    } finally {
+      setIsLoading(false); // Stop animation
+    }
   };
 
   // Group inputs for cleaner layout
@@ -93,7 +97,9 @@ function App() {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 p-4 md:p-8">
       <header className="max-w-7xl mx-auto mb-10 flex items-center justify-between pb-6 border-b border-slate-200">
         <h1 className="text-4xl font-bold tracking-tight">Fraud<span className='text-indigo-600'>Detector</span>.ai</h1>
-        <div className="text-sm text-slate-500 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">API Status: <span className="text-emerald-600 font-medium">● Connected</span></div>
+        <div className="text-sm text-slate-500 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+          API Status: <span className="text-emerald-600 font-medium">● Connected</span>
+        </div>
       </header>
 
       <form onSubmit={handleSubmit} className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
@@ -112,77 +118,77 @@ function App() {
               />
             ))}
             {errorInputs.map(input => (
-                <FormInput 
-                  key={input} 
-                  name={input} 
-                  value={formData[input]} 
-                  onChange={handleChange} 
-                />
-              ))}
+              <FormInput 
+                key={input} 
+                name={input} 
+                value={formData[input]} 
+                onChange={handleChange} 
+              />
+            ))}
           </div>
 
           <div className="mt-10 pt-8 border-t border-slate-200">
             <h3 className="text-lg font-semibold mb-5">Transaction Type</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {typeInputs.map(input => (
-                    <TypeToggle key={input} name={input} value={formData[input]} onChange={handleChange} />
-                ))}
+              {typeInputs.map(input => (
+                <TypeToggle key={input} name={input} value={formData[input]} onChange={handleChange} />
+              ))}
             </div>
           </div>
         </div>
 
         {/* Action Card (Sticky) */}
         <div className="md:col-span-1 space-y-8">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 sticky top-8">
-                <h3 className="text-lg font-semibold mb-5">Analyze Risk</h3>
-                <p className="text-sm text-slate-600 mb-6">Review the details and click the button below to run the AI fraud analysis model.</p>
-                
-                <button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className={`w-full flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-semibold rounded-2xl text-lg shadow-md hover:bg-indigo-700 transition duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed`}
-                >
-                  {isLoading ? (
-                    <>
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Processing...
-                    </>
-                  ) : 'Run Analysis'}
-                </button>
-            </div>
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 sticky top-8">
+            <h3 className="text-lg font-semibold mb-5">Analyze Risk</h3>
+            <p className="text-sm text-slate-600 mb-6">Review the details and click the button below to run the AI fraud analysis model.</p>
+            
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className={`w-full flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 text-white font-semibold rounded-2xl text-lg shadow-md hover:bg-indigo-700 transition duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : 'Run Analysis'}
+            </button>
+          </div>
 
-            {/* Results Area (Animated later) */}
-            <div className={`bg-white p-6 rounded-3xl shadow-inner border border-slate-200 min-h-[150px] flex items-center justify-center transition-all duration-500 ease-in-out ${result !== null ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                {result === 'error' && (
-                    <div className='text-center text-red-600'>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto mb-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
-                        <p className='font-semibold'>Connection Error</p>
-                        <p className='text-sm'>Could not reach API</p>
-                    </div>
-                )}
-                {result === 1 && (
-                    <div className='text-center text-amber-600'>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mx-auto mb-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.376 1.948 3.376h14.718c1.731 0 2.814-1.876 1.948-3.376L13.5 3.94c-.866-1.5-3.032-1.5-3.898 0L2.697 16.376ZM12 12.75h.008v.008H12v-.008Z" /></svg>
-                        <p className='font-bold text-3xl'>High Risk (Fraud)</p>
-                        <p className='text-sm mt-1'>Immediate review recommended</p>
-                    </div>
-                )}
-                {result === 0 && (
-                    <div className='text-center text-emerald-600'>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mx-auto mb-3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                        <p className='font-bold text-3xl'>Safe</p>
-                        <p className='text-sm mt-1'>No anomalies detected</p>
-                    </div>
-                )}
-                {result === null && !isLoading && (
-                    <div className='text-center text-slate-400'>
-                       <p>Awaiting analysis...</p>
-                    </div>
-                )}
-            </div>
+          {/* Results Area */}
+          <div className={`bg-white p-6 rounded-3xl shadow-inner border border-slate-200 min-h-[150px] flex items-center justify-center transition-all duration-500 ease-in-out ${result !== null ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+            {result === 'error' && (
+              <div className='text-center text-red-600'>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto mb-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+                <p className='font-semibold'>Connection Error</p>
+                <p className='text-sm'>Could not reach API</p>
+              </div>
+            )}
+            {result === 1 && (
+              <div className='text-center text-amber-600'>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mx-auto mb-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.376 1.948 3.376h14.718c1.731 0 2.814-1.876 1.948-3.376L13.5 3.94c-.866-1.5-3.032-1.5-3.898 0L2.697 16.376ZM12 12.75h.008v.008H12v-.008Z" /></svg>
+                <p className='font-bold text-3xl'>High Risk (Fraud)</p>
+                <p className='text-sm mt-1'>Immediate review recommended</p>
+              </div>
+            )}
+            {result === 0 && (
+              <div className='text-center text-emerald-600'>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mx-auto mb-3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                <p className='font-bold text-3xl'>Safe</p>
+                <p className='text-sm mt-1'>No anomalies detected</p>
+              </div>
+            )}
+            {result === null && !isLoading && (
+              <div className='text-center text-slate-400'>
+                <p>Awaiting analysis...</p>
+              </div>
+            )}
+          </div>
         </div>
       </form>
 
